@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
         
 
     # INIT
-        self.setWindowTitle("earthquakes")
+        self.setWindowTitle("quakexplore")
         self.setFixedSize(QSize(1200, 700))
         layout = QVBoxLayout()
 
@@ -381,7 +381,7 @@ class MainWindow(QMainWindow):
     def show_ids(self):
         self.datalist.setFocus()
         quake = self.quakes[self.datalist.currentRow()]
-        print(f"{quake['id']} - associated events: {quake['props']['ids'].strip(',').split(',')} ({quake['props']['ids'].count(',') - 1})")
+        print(f"{quake['id']} - associated events ({quake['props']['ids'].count(',') - 1}): {quake['props']['ids'].strip(',').split(',')}")
 
     @Slot() # open quake details
     def open_event_page(self):
