@@ -1,25 +1,3 @@
-"""
-
-Earthquake data provided by USGS, accessed through API
-
-    https://earthquake.usgs.gov/fdsnws/event/1/
-    https://earthquake.usgs.gov/data/comcat/index.php
-    
-The GEOJson data format:
-
-    https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php
-    https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson_detail.php
-    https://geojson.org/
-    https://geojson.io/#map=5.76/46.624/19.405
-
-Python and APIs:
-
-    https://realpython.com/python-api/
-
-    > python -m pip install requests
-
-"""
-
 import sys
 
 from requests import get
@@ -49,9 +27,7 @@ sources = {
 
 class MainWindow(QMainWindow):
     def __init__(self):
-        super(MainWindow, self).__init__()
-
-        
+        super(MainWindow, self).__init__()        
 
     # INIT
         self.setWindowTitle("quakexplore")
@@ -204,7 +180,10 @@ class MainWindow(QMainWindow):
         output_layout.addWidget(self.details)        
 
         self.detail_summary = QLabel()
+        self.detail_summaryx = QLabel()
+        self.detail_summaryx.setOpenExternalLinks(True)
         self.detail_location = QLabel()
+        self.detail_coords = QLabel()
         self.detail_felt = QLabel()
         self.detail_updated = QLabel()
         self.detail_intensity = QLabel()
@@ -214,16 +193,22 @@ class MainWindow(QMainWindow):
         self.detail_status = QLabel()
         self.detail_net = QLabel()
         self.detail_net.setOpenExternalLinks(True)
+        self.detail_nst = QLabel()
+        self.detail_accuracy = QLabel()
         self.detail_ids = QPushButton("Associated events")
         self.detail_ids.clicked.connect(self.show_ids)
         self.detail_ids.setVisible(False)
 
         details_layout.addWidget(self.detail_summary)
+        details_layout.addWidget(self.detail_summaryx)
         details_layout.addWidget(self.detail_location)
+        details_layout.addWidget(self.detail_coords)
         details_layout.addWidget(self.detail_felt)
         details_layout.addWidget(self.detail_intensity)
         details_layout.addWidget(self.detail_alert)
         details_layout.addWidget(self.detail_net)
+        details_layout.addWidget(self.detail_nst)
+        details_layout.addWidget(self.detail_accuracy)
         details_layout.addWidget(self.detail_ids)
         details_layout.addStretch()
         details_layout.addWidget(self.detail_status)
@@ -358,9 +343,16 @@ class MainWindow(QMainWindow):
             quake = self.quakes[quake.row()]
             print(f"Show quake details: {quake['id']}, significance: {quake['props']['sig']}\n  > {quake['label']}\n  > Associated events ({quake['props']['ids'].count(',') - 1}): {quake['props']['ids'].strip(',').split(',')}")
 
+            # summary TODO: colorize magError, depthError, add magNst
             self.detail_summary.setText(f"{quake['props']['mag']} magnitude quake, {quake['geometry']['coordinates'][2]:.1f} kms deep @ {quake['datetime']}")
+            self.detail_summaryx.setText(f"(<a href='https://www.usgs.gov/programs/earthquake-hazards/magnitude-types'>magnitude type</a>: {quake['props']['magType']}, seismic event: {quake['props']['type']})")
 
+            # location TODO: integrate degree sign and long/lat strings with setText, colorize horizontalError
             self.detail_location.setText(f"{quake['props']['place'] if quake['props']['place'] else 'Unknown location'}")
+            degree_sign = u'\N{DEGREE SIGN}'
+            long = f"{abs(quake['geometry']['coordinates'][0]):.3f}{chr(176)} {'W' if quake['geometry']['coordinates'][0] < 0 else 'E'}"
+            lat = f"{abs(quake['geometry']['coordinates'][1]):.3f}{degree_sign} {'S' if quake['geometry']['coordinates'][0] < 0 else 'N'}"
+            self.detail_coords.setText(f"Longitude: {long}\nLatitude:  {lat}")
 
             self.detail_felt.setText("Nobody felt it." if not quake['props']['felt'] else f"Felt by {quake['props']['felt']} people.")
 
@@ -372,8 +364,14 @@ class MainWindow(QMainWindow):
             self.detail_net.setText(f"Preferred source: <a href='https://earthquake.usgs.gov/data/comcat/catalog/{quake['props']['net']}/'>{sources[quake['props']['net']]}</a>")
             self.detail_ids.setVisible(False) if (quake['props']['ids'].count(",") == 2 and quake['props']['ids'].strip(",") == quake['id']) or (quake['props']['ids'].count(",") == 3 and "usauto" in quake['props']['ids']) else self.detail_ids.setVisible(True)
 
+            # accuracy TODO: colorize
+            self.detail_nst.setText(f"Seismic stations that reported P- and S-arrival times: {quake['props']['nst']}")
+            self.detail_accuracy.setText(f"dmin: {quake['props']['dmin']}, rms: {quake['props']['rms']}, gap: {quake['props']['gap']}{degree_sign}")
+
             # ...
             
+            # sources TODO: locationSource, magSource, sources
+
             self.detail_status.setText(f"<font color='{'green' if quake['props']['status'] == 'reviewed' else 'yellow'}'>{quake['props']['status'].upper()}</font>")
             self.detail_updated.setText(f"(last update: {strftime('%y-%m-%d %H:%M:%S', gmtime(int(quake['props']['updated']/1000)))})")
 
@@ -442,4 +440,4 @@ try:
     app.exec()
 except ConnectionError as err: print(f"Connection error: {err}")
 
-print("Goodbye!")
+print("Closing application...")
