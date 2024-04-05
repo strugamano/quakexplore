@@ -1,3 +1,6 @@
 /.directory
-/.gitignore
 /*/.directory
+/.gitignore
+/.idea
+/__pycache__
+/*/__pycache__
